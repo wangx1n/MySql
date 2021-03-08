@@ -11,7 +11,7 @@
 
 
 
-**关系型数据库**（noSql）
+**非关系型数据库**（noSql）
 
 * Redis, MongDB
 * 非关系型数据库，同过对象存储，同过对象自身的属性来决定。
@@ -248,8 +248,8 @@ MySQL引擎在物理文件上的区别
 
 * InnoDB 在数据库表中只有一个*.frm文件，以及上级目录下的ibdate文件
 * MYISAM 对应文件
-  * *.frm -表结构的定义文件
-  * *.MYD 数据文件（data）
+  * *.frm  表结构的定义文件
+  * *.MYD 数据文件（data）1
   * *.MYI  索引文件（index）
 
 
@@ -368,6 +368,239 @@ ALTER TABLE student add constraint `FK_grade` foreign key (`grade`) references `
 
 
 ### 3.2 DML语言（全部记住）
+
+**数据库意义**：数据存储，数据管理
+
+DML语言：数据操作语言
+
+* insert
+* update
+* delete
+
+
+
+### 3.3 插入
+
+```sql
+-- insert into 表名([字段1，字段2，字段3])values('值1')，('值2'),(...)
+insert into `grade`(`name`)values('大一');
+--插入语句，字段要和数据一一对应
+
+insert into `grade`(`name`)values('大二'),('大三');
+--同一个字段，插入多个值，用括号隔开
+
+INSERT INTO `student`(`name`,`pwd`) VALUES ('李','12345678'),('童潜','1234')
+--插入这句话的时候发现主键被修改为不自增了，要想修改成自增要修改为：
+ALTER TABLE student modify id1 int(3) auto_increment PRIMARY key ;
+```
+
+语法：`insert into 表名([字段1，字段2，字段3])values('值1')，('值2'),(...)`
+
+**注意事项**
+
+* 字段与字段之间使用英文逗号隔开
+* 字段可以省略，但是省略后面的值要一一对应
+* 可以同时插入多条记录，VALUES后面的值要逗号分开
+
+
+
+### 3.4 修改
+
+```s\ql
+update `student` set `name`='wangxin' where `name`='王鑫'
+--不指定查询条件，会修改表中所有记录
+update `student` set `name`='wangxin'
+--修改多个属性，逗号隔开
+update `student` set `name`='wangdong', email = '925798209@qq.com' where `name`='王鑫'
+
+语法：update 表名 set `字段名` = '字段内容'，`字段名`= `字段内容` where `字段名` = `字段内容`
+```
+
+条件：where 子句 运算符 id 等于 某个值，大于某个值，或在区间
+
+| 操作符           | 含义   | 范围 | 结果       |
+| ---------------- | ------ | ---- | ---------- |
+| =                | 等于   |      | false/true |
+| <>或!=           | 不等于 |      | false/true |
+| >                |        |      |            |
+| <                |        |      |            |
+| >=               |        |      |            |
+| <=               |        |      |            |
+| between...and... | []     |      |            |
+| AND              |        |      |            |
+| OR               |        |      |            |
+
+
+
+**注意：**
+
+* column_name，数据库列，尽量带上``
+* 条件，筛选的条件，如果没有指定，则会修改所有的列
+* value，是一个值，也可以是一个变量
+
+
+
+### 3.5  删除
+
+> delete
+
+```sql
+--尽量避免这么写，会清空整张表
+DELETE FORM student
+--删除指定数据
+DELETE FROM student where id = 1
+```
+
+> truncate
+
+作用：完全清空数据表，表的结构和索引约束不会变。
+
+> delete 和 truncate区别
+
+相同：
+
+* 都能删除数据，都不会删除表结构
+
+不同：
+
+* TRUNCATE	重新设置自增列，从0开始
+* TRUNCATE    不会影响事务
+
+
+
+## 4. DQL 查询
+
+```sql
+--查询带别名
+SELECT `student_id` AS 学号,`student_name` AS 学生姓名 FROM student AS 学生表
+--拼接函数Concat(a,b)
+SELECT CONCAT('姓名:',student_name) AS 姓名 FROM student AS 学生表
+```
+
+
+
+> 去重 distinct
+
+```sql
+SELECT DISTINCT `STUDENT_NO` FROM result 
+```
+
+去除select 中重复的字段
+
+
+
+```sql
+SELECT @@auto_increment_increment --查询自增的步长
+```
+
+
+
+> 模糊查询
+
+| 运算符      | 语法              | 描述                                      |
+| ----------- | ----------------- | ----------------------------------------- |
+| IS NULL     | a is null         | null为真                                  |
+| IS NOT NULL | a is not null     | !null为真                                 |
+| BETWEEN     | a between b and c | a在b、c之间，则为真                       |
+| LIKE        | a like b          | 如果a匹配b，则为真                        |
+| IN          | a in (a1,a2,a3)   | 假设a在a1，a2, a3其中的某一个值，其值为真 |
+
+
+
+```sql
+--like结合%（代表0-任意个字符） _（一个字符）
+--in查询的字段在in集合中
+
+--null
+--查询地址字段为空的人
+SELECT ... FROM ... WHERE address IS NOT NULL OR address=''
+```
+
+
+
+### 4.3 联表查询
+
+> JOIN对比
+
+| 操作       | 描述                                         |
+| ---------- | -------------------------------------------- |
+| INNER JOIN | 如果表中至少有一个匹配的值，就返回行         |
+| LEFT JOIN  | 即使右表中没有匹配，也会从左表中返回所有的值 |
+| RIGHT JOIN | 即使左表中没有匹配，也会从右表中返回所有的值 |
+
+
+
+```sql
+SELECT DISTINCT d.tag_id,d.`value`,d.gather_time,s.tag_alias
+FROM data_gather_int AS d
+LEFT JOIN sys_set_tag AS s
+ON d.tag_id = s.id
+ORDER BY d.gather_time ASC
+
+--join on 连接查询
+--where 等值查询
+
+--联三张表，注意where ORDER_BY要放在最后面的位置
+SELECT DISTINCT s.tag_alias,d.`value`,d.gather_time,d.tag_id,md.name
+FROM data_gather_int AS d
+LEFT JOIN sys_set_tag AS s
+ON d.tag_id = s.id
+INNER JOIN meta_device AS md
+ON s.device_id = md.id
+WHERE d.gather_time BETWEEN '2020-01-01' AND '2021-12-31'
+ORDER BY d.gather_time ASC
+```
+
+
+
+> 自连接
+
+**一张表拆成两张表，再连接**
+
+父类
+
+| c_id | c_name   |
+| ---- | -------- |
+| 2    | 信息技术 |
+| 3    | 软件开发 |
+| 5    | 美术设计 |
+|      |          |
+
+子类
+
+| pid  | c_id | c_name   |
+| ---- | ---- | -------- |
+| 3    | 4    | 数据库   |
+| 2    | 8    | 办公信息 |
+| 3    | 6    | web开发  |
+| 5    | 7    | ps设计   |
+
+操作：查询父类对应的子类关系
+
+```sql
+SELECT a.`c_name` AS '父栏目',b.`c_name` AS '子栏目'
+FROM `category` AS a ,`catagory` AS b
+where a.`c_id` = b.`pid`
+```
+
+查询结果：
+
+| 父栏目   | 子栏目   |
+| -------- | -------- |
+| 软件开发 | 数据库   |
+| 软件开发 | web开发  |
+| 信息技术 | 办公信息 |
+| 美术设计 | ps设计   |
+
+
+
+### 4.5 分页和排序
+
+排序：升序ASC，降序DESC
+
+
+
+分页：limit 起始位置，结束位置
 
 
 

@@ -16,3 +16,16 @@ MySQL基础更新至：
 * 认识数据库字段属性，zerofill，auto_increment，UnSigned，not null ，default
 * 认识两种数据库表类型，MYISAM和InnoDB，认识两种不同的数据库引擎的区别
 * 认识修改（增删改字段、改表名）和删除表的方式
+
+## 2021/03/08
+
+MYSQL基础更新至：
+
+第四章 DQL查询
+
+包含
+
+* 数据库查询select
+* 联表查询
+* 自联查询
+* 分页和排序
