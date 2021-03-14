@@ -604,3 +604,218 @@ where a.`c_id` = b.`pid`
 
 
 
+### 4.6 子查询和嵌套查询
+
+```sql
+--查询分数高于80分的学生的学号姓名，且科目为高等数学-2
+
+--使用子查询
+SELECT  DISTINCT s.`StudentNo`,`studentName`
+FROM student s
+INNER JOIN result r
+ON r.studentNO = s.studentNO
+WHERE `StudentResult` >= 80
+AND
+`SubJectNo` = (
+    SELECT `SubjectNO` FROM `subject`
+    WHERE `SubjectName` = `高等数学-2`
+)
+
+--使用联表查询
+SELECT  DISTINCT s.`StudentNo`,`studentName`
+FROM student s
+INNER JOIN result r
+ON r.studentNO = s.studentNO
+INNER JOIN subject sb
+ON sb.SubjectNo = r.SubjectNo
+WHERE `StudentResult` >= 80 
+AND SubjectName = `高等数学-2`
+
+--嵌套查询
+SELECT `studentNO`,`studentNO` FROM student WHERE studentNo IN(
+    SELECT `studentNO` FROM result WHERE StudentResult >= 80 AND subjectNO IN(
+        SELECT `subjectNO` FROM subject WHERE subjectName = '高等数学-2'
+ )
+)
+```
+
+
+
+### 4.7 分组
+
+```sql
+SELECT subJectName,AVG(studentResult) AS 平均分,MAX(studentResult),Min(studentResult)
+FROM result r
+INNER JOIN `subject` s
+ON r.subjectNO = s.subjectNO
+GROUP BY r.subjectNO
+HAVING 平均分 > 80
+```
+
+
+
+## 5 MySql函数
+
+### 5.1 常用函数
+
+```sql
+--数字
+SELECT ABS(-8) --绝对值
+SELECT CEILING(9.4) --向上取整
+SELECT FLOOR(9.4) --向下取证
+SELECT RAND() --返回一个0-1之间的随机数
+SELECT SIGN() --判断一个数的符号 负数返回 -1 正数返回 1 0 返回0
+
+--字符串
+SELECT CHAR_LENGTH('') --返回字符串长度
+SELECT CONCAT('','') --合并字符串
+SELECT INSERT('原字符串','1','2','改后') --从指定位置替换字符串
+SELECT LOWER('') --转小写
+SELECT UPPER('') --转大写
+SELECT INSTR('guangzhou','h',) --返回第一次出现的索引
+SELECT REPLACE('准备替换','准备','完成') --替换指定字符串
+SELECT SUBSTR('准备截取字符串',1,4) --从指定的位置截取，截4个
+SELECT REVERSE('') --反转字符串
+
+--日期
+SELECT CURRENT_DATE()
+SELECT CURDATE()
+SELECT NOW()
+SELECT LOCALTIME()
+SELECT SYSDATE()
+SELECT SECOND(NOW())
+```
+
+
+
+### 5.2 聚合函数
+
+| 函数名称 | 描述   |
+| -------- | ------ |
+| COUNT()  | 计数   |
+| SUM()    | 求和   |
+| AVG()    | 平均值 |
+| MAX()    |        |
+
+```sql
+SELECT COUNT(student) FROM student --查询字段计数，会忽略所有的null值
+SELECT COUNT(*) FROM student --查询表有多少行 不会忽略null值
+SELECT COUNT(1) FROM student --查询表有多少行 不会忽略null值，速度更快
+```
+
+
+
+## 6.事务
+
+== **要么都成功，要么都失败**==
+
+> ACID原则 原子性，一致性，隔离性，持久性
+
+**原子性**：要么都执行，要么都不执行
+
+**一致性**：事务操作前后状态一致
+
+**持久性**：事务结束后数据不会随着外界原因丢失。没有提交，恢复到原状，提交了，就不变。
+
+**隔离性**：事务之间不会相互影响
+
+
+
+**脏读**：一个事务读取了另一个事务未提交的数据
+
+**不可重复读**：多次读取表结果不同
+
+**幻读**：一个事务读取到了别人插入的数据，导致前后读取不一致
+
+
+
+> 手动开启事务
+
+```sql
+--1.关闭自动提交
+SET autocommit = 0
+--2.开启一个事务
+START TRANSECTION
+--3.提交
+COMMIT
+--4.回滚
+ROLLBACK
+--5，事务结束
+SET autocommit = 1
+```
+
+
+
+```sql
+--设置保存点
+ROLLBACK TO SAVEPOINT --回滚到保存点
+RELEASE SAVEPOINT --删除保存点
+```
+
+
+
+## 7.索引
+
+### 7.1 索引的分类
+
+* 主键索引 (PRIMARY KEY)
+  * 唯一标识，不可重复，只能有一个列作为主键
+* 唯一索引 (UNIQUE KEY)
+  * 避免重复的列出现，唯一索引可以重复，唯一索引可以重复
+* 常规索引（INDEX/KEY）
+  * 默认
+* 全文索引 （FullText）
+  * 特定的数据库引擎可以
+
+
+
+```sql
+SHOW INDEX FROM student --显示表的索引信息
+
+ALTER TABLE `student` ADD FULLText INDEX `studentname`(`studentname`) --增加一个全文索引
+
+CREATE INDEX id_app_user_name ON app_user(`username`)
+
+EXPLAIN SELECT * FROM student --非全文索引
+
+EXPLAIN SELECT * FROM student WHERE MATCH(studentname) AGAINST ('王')
+```
+
+
+
+## 7.3 索引原则
+
+* 索引不是越多越好
+* 不要对经常变动的数据加索引
+* 小数据量的表不需要加索引
+* 索引一般加载常用来查询的字段上
+
+
+
+> 索引的数据结构
+
+Btree : InnoDB默认
+
+
+
+## 9 数据库规范设计
+
+> 第一范式
+
+每一个字段都是不可再分的原子项
+
+> 第二范式
+
+前提：满足第一范式
+
+一张表的每一列都必须与主键相关
+
+> 第三范式
+
+前提：满足第一范式和第二范式
+
+一张表的每一列都必须和主键直接相关
+
+
+
+**关联查询的表不得超过三张表**
